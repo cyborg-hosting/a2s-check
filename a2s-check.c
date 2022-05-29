@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdint.h>
-//#include <unistd.h>
+#include <unistd.h>
 #include "ssq/a2s.h"
 #include "docker.h"
 
-unsigned unsigned int sleep(unsigned int seconds);
+//unsigned unsigned int sleep(unsigned int seconds);
 
 DOCKER *docker = NULL;
 SSQ_QUERIER *querier = NULL;
