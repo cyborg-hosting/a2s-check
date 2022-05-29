@@ -2,19 +2,12 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdint.h>
-//#include <unistd.h>
+#include <unistd.h>
 #include "ssq/a2s.h"
 #include "docker.h"
 
-unsigned int sleep(unsigned int seconds);
-
 DOCKER *docker = NULL;
 SSQ_QUERIER *querier = NULL;
-
-void sigterm_handler(int sig)
-{
-    freeAndExit();
-}
 
 void freeAndExit()
 {
@@ -27,12 +20,17 @@ void freeAndExit()
     exit(EXIT_FAILURE);
 }
 
+void sigterm_handler(int sig)
+{
+    freeAndExit();
+}
+
 int main()
 {
     docker = docker_init("v1.25");
     if(docker == NULL)
     {
-        fputs(stderr, "docker environment not found (docker.sock volume may not exist)");
+        fputs("docker environment not found (docker.sock volume may not exist)\n", stderr);
         freeAndExit();
     }
     CURLcode response;
@@ -42,16 +40,16 @@ int main()
     querier = ssq_init();
     if(querier == NULL)
     {
-        fputs(stderr, "Source server querier initialization failed");
+        fputs("Source server querier initialization failed\n", stderr);
         freeAndExit();
     }
 
-    signal(SIGTERM, sigterm_handler);
+    signal(SIGINT, sigterm_handler);
 
     char *sContainerName = getenv("SRCDS_CONTAINER_NAME");
     if(sContainerName == NULL)
     {
-        fputs(stderr, "environment variable 'SRCDS_CONTAINER_NAME' is not set.");
+        fputs("environment variable 'SRCDS_CONTAINER_NAME' is not set.\n", stderr);
         freeAndExit();
     }
     sprintf(buffer, "http://v1.25/containers/%s/json", sContainerName);
@@ -62,14 +60,14 @@ int main()
     }
     else
     {
-        fputs(stderr, "environment variable 'SRCDS_CONTAINER_NAME' is invalid (specified container does not exist).");
+        fputs("environment variable 'SRCDS_CONTAINER_NAME' is invalid (specified container does not exist).\n", stderr);
         freeAndExit();
     }
 
     char *sHost = getenv("SRCDS_HOST");
     if(sHost == NULL)
     {
-        fputs(stderr, "environment variable 'SRCDS_HOST' is not set.");
+        fputs("environment variable 'SRCDS_HOST' is not set.\n", stderr);
         freeAndExit();
     }
     else
@@ -77,27 +75,28 @@ int main()
         printf("Target SRCDS Host: %s\n", sHost);
     }
 
-    char *sPort = getenv("SRCDS_PORT");
+    const char *sPort = getenv("SRCDS_PORT");
     if(sPort == NULL)
     {
-        fputs(stderr, "environment variable 'SRCDS_PORT' is not set.");
+        fputs("environment variable 'SRCDS_PORT' is not set.\n", stderr);
         freeAndExit();
     }
     else if(sscanf(sPort, "%*hu") == EOF)
     {
-        fputs(stderr, "environment variable 'SRCDS_PORT' is invalid (not a number)");
+        fputs("environment variable 'SRCDS_PORT' is invalid (not a number)\n", stderr);
         freeAndExit();
     }
     else
     {
-        printf("Target SRCDS Host: %s\n", sPort);
+        printf("Target SRCDS Port: %s\n", sPort);
     }
+    sPort = getenv("SRCDS_PORT");
     uint16_t iPort;
     sscanf(sPort, "%hu", &iPort);
 
     char *sInitTime = getenv("INITIAL_WAITING_TIME");
     int iInitTime = 60;
-    if(sInitTime == NULL && sscanf(sInitTime, "%*d") != EOF)
+    if(sInitTime != NULL && sscanf(sInitTime, "%*d") != EOF)
     {
         sscanf(sInitTime, "%d", &iInitTime);
     }
@@ -152,7 +151,7 @@ int main()
             }
             else
             {
-                fputs(stderr, "Restart Failed");
+                fputs("Restart Failed", stderr);
                 freeAndExit();
             }
 
@@ -162,8 +161,11 @@ int main()
         sleep(12);
     }
     
-    docker_destroy(docker);
-    ssq_free(querier);
+    if(docker != NULL)
+        docker_destroy(docker);
+
+    if(querier != NULL)
+        ssq_free(querier);
 
     return 0;
 }
