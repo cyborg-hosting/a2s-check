@@ -154,11 +154,11 @@ int main()
             response = docker_post(docker, buffer, "");
             if(response == CURLE_OK)
             {
-                puts("Restart Sucess.");
+                puts("Restart Success.");
             }
             else
             {
-                fputs("Restart Failed", stderr);
+                fputs("Restart Failure.", stderr);
                 freeAndExit();
             }
 
@@ -173,6 +173,9 @@ int main()
 
     if(querier != NULL)
         ssq_free(querier);
+
+    if(info != NULL)
+        ssq_info_free(info);
 
     return 0;
 }
