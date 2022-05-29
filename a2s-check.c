@@ -2,17 +2,23 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdint.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include "ssq/a2s.h"
 #include "docker.h"
 
+unsigned unsigned int sleep(unsigned int seconds);
+
 DOCKER *docker = NULL;
 SSQ_QUERIER *querier = NULL;
+A2S_INFO *info = NULL;
 
 void freeAndExit()
 {
     if(docker != NULL)
         docker_destroy(docker);
+
+    if(info != NULL)
+        ssq_info_free(info);
 
     if(querier != NULL)
         ssq_free(querier);
@@ -121,7 +127,7 @@ int main()
 
     while(1)
     {
-        A2S_INFO *info = ssq_info(querier);
+        info = ssq_info(querier);
 
         if(!ssq_ok(querier))
         {
@@ -137,6 +143,7 @@ int main()
             iErrorCount = 0;
 
             ssq_info_free(info);
+            info = NULL;
         }
 
         if(iErrorCount == 5)
