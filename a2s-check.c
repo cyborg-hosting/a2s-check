@@ -137,9 +137,16 @@ int main()
             ssq_errclr(querier);
 
             iErrorCount += 1;
+
+            printf("Error Count: %d\n", iErrorCount);
         }
         else
         {
+            if(iErrorCount != 0)
+            {
+                puts("Error Count: 0");
+            }
+
             iErrorCount = 0;
 
             ssq_info_free(info);
@@ -158,7 +165,7 @@ int main()
             }
             else
             {
-                fputs("Restart Failure.", stderr);
+                fputs("Restart Failure.\n", stderr);
                 freeAndExit();
             }
 
