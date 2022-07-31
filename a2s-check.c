@@ -151,9 +151,16 @@ int main()
             ssq_errclr(querier);
 
             iErrorTime += iPollingInterval;
+
+            printf("Error Time in Seconds: %d\n", iErrorTime);
         }
         else
         {
+            if(iErrorTime != 0)
+            {
+                puts("Error Time in Seconds: 0");
+            }
+
             iErrorTime = 0;
 
             ssq_info_free(info);
@@ -172,7 +179,7 @@ int main()
             }
             else
             {
-                fputs("Restart Failure.", stderr);
+                fputs("Restart Failure.\n", stderr);
                 freeAndExit();
             }
 
