@@ -107,6 +107,20 @@ int main()
         sscanf(sInitTime, "%d", &iInitTime);
     }
 
+    char *sWaitTime = getenv("WAITING_TIME");
+    int iWaitTime = 60;
+    if(sWaitTime != NULL && sscanf(sWaitTime, "%*d") != EOF)
+    {
+        sscanf(sWaitTime, "%d", &iWaitTime);
+    }
+
+    char *sPollingInterval = getenv("POLLING_INTERVAL");
+    int iPollingInterval = 10;
+    if(sPollingInterval != NULL && sscanf(sPollingInterval, "%*d") != EOF)
+    {
+        sscanf(sPollingInterval, "%d", &iPollingInterval);
+    }
+
     ssq_set_target(querier, sHost, iPort);
 
     if (!ssq_ok(querier)) {
@@ -121,7 +135,7 @@ int main()
     printf("Wait for %d seconds to ensure the server is available on start\n", iInitTime);
     sleep(iInitTime);
 
-    int iErrorCount = 0;
+    int iErrorTime = 0;
 
     sprintf(buffer, "http://v1.25/containers/%s/restart", sContainerName);
 
@@ -136,20 +150,20 @@ int main()
 
             ssq_errclr(querier);
 
-            iErrorCount += 1;
+            iErrorTime += iPollingInterval;
         }
         else
         {
-            iErrorCount = 0;
+            iErrorTime = 0;
 
             ssq_info_free(info);
             info = NULL;
         }
 
-        if(iErrorCount == 5)
+        if(iErrorTime >= iWaitTime)
         {
             puts("Server Restarting...");
-            iErrorCount = 0;
+            iErrorTime = 0;
 
             response = docker_post(docker, buffer, "");
             if(response == CURLE_OK)
@@ -165,7 +179,7 @@ int main()
             sleep(iInitTime);
         }
 
-        sleep(12);
+        sleep(iPollingInterval);
     }
     
     if(docker != NULL)
